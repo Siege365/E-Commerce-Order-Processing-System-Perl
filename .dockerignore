@@ -1,0 +1,11 @@
+.dockerignore
+Dockerfile
+fly.toml
+render.yaml
+README.md
+LICENSE
+*.md
+.git/
+.gitignore
+.env.local
+local/

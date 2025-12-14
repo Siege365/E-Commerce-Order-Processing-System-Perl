@@ -1,0 +1,12 @@
+# Render.com deployment configuration
+services:
+  - type: web
+    name: ecommerce-perl
+    env: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: MOJO_MODE
+        value: production
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/data/ecommerce.db
