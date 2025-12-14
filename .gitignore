@@ -1,0 +1,73 @@
+# E-Commerce Order Processing System - Git Ignore File
+
+# Environment Configuration
+.env
+.env.local
+.env.*.local
+
+# Database Files
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Perl Local Libraries
+local/
+.carton/
+cpanm/
+
+# Perl Build Artifacts
+blib/
+pm_to_blib
+*.bak
+*.old
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Logs
+*.log
+log/
+logs/
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+
+# Backup Files
+backup/
+*.backup
+
+# Mojolicious
+mojo.log
+hypnotoad.pid
+
+# CPAN
+.build/
+_build/
+Build
+Build.PL.bak
+MYMETA.*
+
+# Coverage
+cover_db/
+*.gcov
+*.gcda
+*.gcno

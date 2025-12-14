@@ -1,0 +1,179 @@
+% layout 'default';
+% title 'Customers';
+
+<div class="page-header">
+    <h1>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Customer Management
+    </h1>
+    <p class="page-subtitle">View and manage your customer accounts.</p>
+</div>
+
+<div class="search-box">
+    <form method="GET" action="/customers">
+        <input type="text" name="search" placeholder="Search customers..." value="<%= param('search') // '' %>">
+        <select name="sort">
+            <option value="" disabled selected hidden>Sort by</option>
+            <option value="id" <%= (defined($sort) && $sort eq 'id') ? 'selected' : '' %>>ID</option>
+            <option value="recent" <%= (defined($sort) && $sort eq 'recent') ? 'selected' : '' %>>Recent User</option>
+            <option value="inactive" <%= (defined($sort) && $sort eq 'inactive') ? 'selected' : '' %>>Inactive</option>
+            <option value="all" <%= (defined($sort) && $sort eq 'all') ? 'selected' : '' %>>All</option>
+        </select>
+        <button type="submit" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Search</button>
+    </form>
+</div>
+
+<div class="card">
+% if (@$customers) {
+<table>
+    <colgroup>
+        <col style="width: 5%;">
+        <col style="width: 12%;">
+        <col style="width: 18%;">
+        <col style="width: 10%;">
+        <col style="width: 20%;">
+        <col style="width: 15%;">
+        <col style="width: 10%;">
+        <col style="width: 10%;">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        % for my $customer (@$customers) {
+        <tr>
+            <td><%= $customer->{id} %></td>
+            <td><%= $customer->{username} || ($customer->{first_name} . ' ' . $customer->{last_name}) %></td>
+            <td><%= $customer->{email} %></td>
+            <td><%= $customer->{phone} || 'N/A' %></td>
+            <td><%= $customer->{address} || 'N/A' %></td>
+            <td><%= $customer->{created_at} %></td>
+            <td>
+                <span class="status <%= $customer->{is_active} ? 'delivered' : 'cancelled' %>">
+                    <%= $customer->{is_active} ? 'Active' : 'Inactive' %>
+                </span>
+            </td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-sm" onclick="toggleDropdown(event, 'customer-<%= $customer->{id} %>')">⋮</button>
+                    <div id="customer-<%= $customer->{id} %>" class="dropdown-menu">
+                        <button type="button" style="color: #dc3545;" onclick="showDeleteCustomerModal('<%= $customer->{id} %>', '<%= $customer->{username} %>', '<%= $customer->{email} %>')">Delete Customer</button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        % }
+    </tbody>
+</table>
+
+% if (defined $total_pages && $total_pages > 1) {
+<div style="text-align: center; margin-top: 30px;">
+    <div class="pagination" style="display: inline-flex;">
+    % if ($page > 1) {
+    <a href="?page=<%= $page - 1 %>&sort=<%= $sort %>" class="btn btn-sm">&laquo; Prev</a>
+    % }
+    
+    % for my $p (1..$total_pages) {
+        % if ($p == $page) {
+        <span class="btn btn-sm btn-primary"><%= $p %></span>
+        % } elsif ($p == 1 || $p == $total_pages || abs($p - $page) <= 2) {
+        <a href="?page=<%= $p %>&sort=<%= $sort %>" class="btn btn-sm"><%= $p %></a>
+        % } elsif (abs($p - $page) == 3) {
+        <span>...</span>
+        % }
+    % }
+    
+    % if ($page < $total_pages) {
+    <a href="?page=<%= $page + 1 %>&sort=<%= $sort %>" class="btn btn-sm">Next &raquo;</a>
+    % }
+    </div>
+</div>
+% }
+
+% } else {
+<p>No customers found.</p>
+% }
+</div>
+
+<!-- Delete Customer Modal -->
+<div id="deleteCustomerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Delete Customer
+            </h3>
+        </div>
+        <div class="modal-body">
+            <p><strong>Warning:</strong> This action will permanently delete all customer data!</p>
+            <p>Are you sure you want to delete:</p>
+            <p>Username: <strong id="deleteCustomerUsername"></strong></p>
+            <p>Email: <strong id="deleteCustomerEmail"></strong></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteCustomerModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Cancel
+            </button>
+            <button type="button" class="btn" style="background: #dc3545; color: white;" onclick="submitDeleteCustomerForm()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Delete Customer
+            </button>
+        </div>
+    </div>
+</div>
+
+<form method="POST" id="deleteCustomerForm" style="display: none;"></form>
+
+<script>
+let deleteCustomerFormAction = '';
+
+function showDeleteCustomerModal(customerId, username, email) {
+    deleteCustomerFormAction = '/customers/' + customerId + '/delete';
+    document.getElementById('deleteCustomerUsername').textContent = username;
+    document.getElementById('deleteCustomerEmail').textContent = email;
+    document.getElementById('deleteCustomerModal').classList.add('show');
+    document.getElementById('customer-' + customerId).classList.remove('show');
+}
+
+function closeDeleteCustomerModal() {
+    document.getElementById('deleteCustomerModal').classList.remove('show');
+}
+
+function submitDeleteCustomerForm() {
+    const form = document.getElementById('deleteCustomerForm');
+    form.action = deleteCustomerFormAction;
+    form.submit();
+}
+
+window.addEventListener('click', function(event) {
+    if (event.target.id === 'deleteCustomerModal') {
+        closeDeleteCustomerModal();
+    }
+});
+</script>
