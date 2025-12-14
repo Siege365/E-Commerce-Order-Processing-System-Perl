@@ -104,8 +104,9 @@ setup_admin_routes(app);
 setup_customer_routes(app);
 
 # Start the application
+my $port = $ENV{PORT} || 3000;
 app->config(hypnotoad => {
-    listen => ['http://*:3000'],
+    listen => ["http://*:$port"],
     workers => 4,
     pid_file => 'app.pid'
 });
