@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "dockerfile"
+  },
+  "deploy": {
+    "startCommand": "perl app.pl daemon -l http://*:8080",
+    "healthcheckUrl": "http://localhost:8080/",
+    "restartPolicyMaxRetries": 5
+  }
+}
