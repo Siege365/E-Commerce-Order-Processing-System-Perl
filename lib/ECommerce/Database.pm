@@ -30,9 +30,30 @@ sub connect {
         # PostgreSQL connection (for production - Render)
         my $database_url = $ENV{DATABASE_URL} or die "DATABASE_URL environment variable not set";
         
+        # Parse PostgreSQL URL: postgresql://user:password@host:port/database
+        my ($user, $password, $host, $port, $database);
+        if ($database_url =~ m{^postgres(?:ql)?://([^:]+):([^@]+)@([^:]+):?(\d*)/?(.+)$}) {
+            $user = $1;
+            $password = $2;
+            $host = $3;
+            $port = $4 || 5432;
+            $database = $5;
+        } elsif ($database_url =~ m{^postgres(?:ql)?://([^:]+):([^@]+)@([^/]+)/(.+)$}) {
+            # URL without port
+            $user = $1;
+            $password = $2;
+            $host = $3;
+            $port = 5432;
+            $database = $4;
+        } else {
+            die "Invalid DATABASE_URL format: $database_url";
+        }
+        
+        my $dsn = "dbi:Pg:dbname=$database;host=$host;port=$port";
+        
         $dbh = DBI->connect(
-            $database_url,
-            undef, undef,
+            $dsn,
+            $user, $password,
             {
                 RaiseError => 1,
                 AutoCommit => 1,
