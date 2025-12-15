@@ -90,6 +90,7 @@
         <a href="/orders" class="btn btn-sm">View All Orders &raquo;</a>
     </div>
     % if ($stats->{recent_orders} && @{$stats->{recent_orders}}) {
+    <div class="table-wrapper">
     <table>
         <colgroup>
             <col style="width: 30%;">
@@ -122,6 +123,7 @@
             % }
         </tbody>
     </table>
+    </div>
     
     % if ($role eq 'admin' || $role eq 'staff') {
         % if (defined $stats->{total_pages} && $stats->{total_pages} > 1) {

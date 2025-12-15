@@ -30,6 +30,7 @@
 
 <div class="card">
 % if (@$customers) {
+<div class="table-wrapper">
 <table>
     <colgroup>
         <col style="width: 5%;">
@@ -79,6 +80,7 @@
         % }
     </tbody>
 </table>
+</div>
 
 % if (defined $total_pages && $total_pages > 1) {
 <div style="text-align: center; margin-top: 30px;">

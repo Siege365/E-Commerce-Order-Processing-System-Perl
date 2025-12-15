@@ -33,6 +33,7 @@
 </div>
 
 <div class="card">
+<div class="table-wrapper">
 <table>
     <colgroup>
         <col style="width: 22%;">
@@ -95,6 +96,7 @@
         % }
     </tbody>
 </table>
+</div>
 </div>
 
 % if (defined $total_pages && $total_pages > 1) {

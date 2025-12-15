@@ -2,6 +2,7 @@ package ECommerce::Database;
 
 # Database Module
 # Handles database initialization, connections, and schema creation
+# Supports both PostgreSQL (production) and SQLite (local development)
 
 use strict;
 use warnings;
@@ -15,6 +16,7 @@ sub new {
     my $class = shift;
     my $self = {
         db_path => $ECommerce::Config::DB_PATH,
+        db_type => $ENV{DATABASE_URL} ? 'postgres' : 'sqlite',
     };
     return bless $self, $class;
 }
@@ -22,19 +24,36 @@ sub new {
 sub connect {
     my $self = shift;
     
-    # Ensure data directory exists
-    my $dir = dirname($self->{db_path});
-    make_path($dir) unless -d $dir;
+    my $dbh;
     
-    my $dbh = DBI->connect(
-        "dbi:SQLite:dbname=$self->{db_path}",
-        "", "",
-        {
-            RaiseError => 1,
-            AutoCommit => 1,
-            sqlite_unicode => 1,
-        }
-    ) or die "Cannot connect to database: $DBI::errstr";
+    if ($self->{db_type} eq 'postgres') {
+        # PostgreSQL connection (for production - Render)
+        my $database_url = $ENV{DATABASE_URL} or die "DATABASE_URL environment variable not set";
+        
+        $dbh = DBI->connect(
+            $database_url,
+            undef, undef,
+            {
+                RaiseError => 1,
+                AutoCommit => 1,
+                pg_enable_utf8 => 1,
+            }
+        ) or die "Cannot connect to PostgreSQL database: $DBI::errstr";
+    } else {
+        # SQLite connection (for local development)
+        my $dir = dirname($self->{db_path});
+        make_path($dir) unless -d $dir;
+        
+        $dbh = DBI->connect(
+            "dbi:SQLite:dbname=$self->{db_path}",
+            "", "",
+            {
+                RaiseError => 1,
+                AutoCommit => 1,
+                sqlite_unicode => 1,
+            }
+        ) or die "Cannot connect to SQLite database: $DBI::errstr";
+    }
     
     return $dbh;
 }
@@ -44,8 +63,10 @@ sub initialize_database {
     
     my $dbh = $self->connect();
     
-    # Enable foreign keys
-    $dbh->do("PRAGMA foreign_keys = ON");
+    # Enable foreign keys for SQLite
+    if ($self->{db_type} eq 'sqlite') {
+        $dbh->do("PRAGMA foreign_keys = ON");
+    }
     
     # Create tables
     $self->create_tables($dbh);
@@ -63,34 +84,52 @@ sub initialize_database {
 sub create_tables {
     my ($self, $dbh) = @_;
     
+    my $is_postgres = $self->{db_type} eq 'postgres';
+    
+    # Define column types based on database
+    my ($serial, $integer, $text, $real, $timestamp);
+    if ($is_postgres) {
+        $serial = 'SERIAL PRIMARY KEY';
+        $integer = 'INTEGER';
+        $text = 'TEXT';
+        $real = 'NUMERIC(10,2)';
+        $timestamp = 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP';
+    } else {
+        $serial = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+        $integer = 'INTEGER';
+        $text = 'TEXT';
+        $real = 'REAL';
+        $timestamp = 'TEXT DEFAULT CURRENT_TIMESTAMP';
+    }
+    
     # Users table
     $dbh->do(qq{
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'customer',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            last_login TEXT,
-            is_active INTEGER DEFAULT 1
+            id $serial,
+            username $text UNIQUE NOT NULL,
+            email $text UNIQUE NOT NULL,
+            password_hash $text NOT NULL,
+            role $text NOT NULL DEFAULT 'customer',
+            created_at $timestamp,
+            last_login $text,
+            is_active $integer DEFAULT 1
         )
     });
     
     # Customers table
     $dbh->do(qq{
         CREATE TABLE IF NOT EXISTS customers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER UNIQUE,
-            first_name TEXT NOT NULL,
-            last_name TEXT NOT NULL,
-            phone TEXT,
-            address TEXT,
-            city TEXT,
-            state TEXT,
-            zip_code TEXT,
-            country TEXT DEFAULT 'USA',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            id $serial,
+            user_id $integer UNIQUE,
+            first_name $text NOT NULL,
+            last_name $text NOT NULL,
+            phone $text,
+            address $text,
+            city $text,
+            state $text,
+            zip_code $text,
+            country $text DEFAULT 'USA',
+            created_at $timestamp,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     });
@@ -98,40 +137,40 @@ sub create_tables {
     # Products table
     $dbh->do(qq{
         CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            description TEXT,
-            sku TEXT UNIQUE NOT NULL,
-            category TEXT NOT NULL,
-            price REAL NOT NULL,
-            cost REAL,
-            stock_quantity INTEGER DEFAULT 0,
-            reorder_level INTEGER DEFAULT 10,
-            image_url TEXT,
-            is_active INTEGER DEFAULT 1,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            id $serial,
+            name $text NOT NULL,
+            description $text,
+            sku $text UNIQUE NOT NULL,
+            category $text NOT NULL,
+            price $real NOT NULL,
+            cost $real,
+            stock_quantity $integer DEFAULT 0,
+            reorder_level $integer DEFAULT 10,
+            image_url $text,
+            is_active $integer DEFAULT 1,
+            created_at $timestamp,
+            updated_at $timestamp
         )
     });
     
     # Orders table
     $dbh->do(qq{
         CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_number TEXT UNIQUE NOT NULL,
-            customer_id INTEGER NOT NULL,
-            status TEXT DEFAULT 'pending',
-            subtotal REAL NOT NULL,
-            tax REAL DEFAULT 0,
-            shipping REAL DEFAULT 0,
-            total REAL NOT NULL,
-            payment_method TEXT,
-            payment_status TEXT DEFAULT 'pending',
-            shipping_address TEXT,
-            billing_address TEXT,
-            notes TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            id $serial,
+            order_number $text UNIQUE NOT NULL,
+            customer_id $integer NOT NULL,
+            status $text DEFAULT 'pending',
+            subtotal $real NOT NULL,
+            tax $real DEFAULT 0,
+            shipping $real DEFAULT 0,
+            total $real NOT NULL,
+            payment_method $text,
+            payment_status $text DEFAULT 'pending',
+            shipping_address $text,
+            billing_address $text,
+            notes $text,
+            created_at $timestamp,
+            updated_at $timestamp,
             FOREIGN KEY (customer_id) REFERENCES customers(id)
         )
     });
@@ -139,14 +178,14 @@ sub create_tables {
     # Order items table
     $dbh->do(qq{
         CREATE TABLE IF NOT EXISTS order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id INTEGER NOT NULL,
-            product_id INTEGER NOT NULL,
-            product_name TEXT NOT NULL,
-            product_sku TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            unit_price REAL NOT NULL,
-            subtotal REAL NOT NULL,
+            id $serial,
+            order_id $integer NOT NULL,
+            product_id $integer NOT NULL,
+            product_name $text NOT NULL,
+            product_sku $text NOT NULL,
+            quantity $integer NOT NULL,
+            unit_price $real NOT NULL,
+            subtotal $real NOT NULL,
             FOREIGN KEY (order_id) REFERENCES orders(id),
             FOREIGN KEY (product_id) REFERENCES products(id)
         )
@@ -155,13 +194,13 @@ sub create_tables {
     # Inventory transactions table
     $dbh->do(qq{
         CREATE TABLE IF NOT EXISTS inventory_transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_id INTEGER NOT NULL,
-            quantity_change INTEGER NOT NULL,
-            transaction_type TEXT NOT NULL,
-            reference_id INTEGER,
-            notes TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            id $serial,
+            product_id $integer NOT NULL,
+            quantity_change $integer NOT NULL,
+            transaction_type $text NOT NULL,
+            reference_id $integer,
+            notes $text,
+            created_at $timestamp,
             FOREIGN KEY (product_id) REFERENCES products(id)
         )
     });

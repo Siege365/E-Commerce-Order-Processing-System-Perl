@@ -151,6 +151,7 @@
                         <li><a href="/dashboard">Dashboard</a></li>
                         <li><a href="/products">Products</a></li>
                         <li><a href="/orders">Orders</a></li>
+                        <li><a href="/account">Account</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -168,7 +169,7 @@
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                             <polyline points="22,6 12,13 2,6"/>
                         </svg>
-                        support@shopperl.com
+                        nkmerka.work@gmail.com
                     </div>
                     <div class="contact-item">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -176,6 +177,14 @@
                         </svg>
                         +1 (555) 123-4567
                     </div>
+                    <a class="contact-item" href="https://siege365.github.io/PortfolioWebsite/" target="_blank" rel="noopener noreferrer" title="View portfolio">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                        Portfolio Website
+                    </a>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -232,8 +241,12 @@
         }
     }
     
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function() {
+    // Close dropdowns when clicking outside (but NOT nav menu)
+    document.addEventListener('click', function(e) {
+        // Don't close dropdowns if clicking on hamburger or nav
+        if (e.target.closest('#hamburgerBtn') || e.target.closest('#siteNav')) {
+            return;
+        }
         const allDropdowns = document.querySelectorAll('.dropdown-menu');
         allDropdowns.forEach(menu => {
             menu.classList.remove('show');
@@ -257,44 +270,72 @@
         }, { passive: true });
     })();
     
-    // Mobile menu toggle
+    // Mobile menu toggle - FIXED VERSION
     (function() {
         const btn = document.getElementById('hamburgerBtn');
         const nav = document.getElementById('siteNav');
         if (!btn || !nav) return;
 
-        function closeNav() {
-            if (nav.classList.contains('open')) {
-                nav.classList.remove('open');
-                btn.setAttribute('aria-expanded', 'false');
-                // ensure hidden when closed
-                nav.style.display = 'none';
-            }
+        // Check if we're in mobile view
+        function isMobileView() {
+            return window.innerWidth <= 880;
         }
 
+        function openNav() {
+            nav.classList.add('open');
+            btn.classList.add('active');
+            btn.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('nav-open');
+        }
+
+        function closeNav() {
+            nav.classList.remove('open');
+            btn.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('nav-open');
+        }
+
+        // Toggle on hamburger click
         btn.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            const isOpen = nav.classList.toggle('open');
-            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            // also set inline display for increased reliability across browsers
-            if (isOpen) {
-                nav.style.display = 'block';
+            
+            if (nav.classList.contains('open')) {
+                closeNav();
             } else {
-                nav.style.display = 'none';
+                openNav();
             }
         });
 
-        // Close when clicking outside
+        // Close when clicking outside nav and hamburger
         document.addEventListener('click', function(e) {
+            if (!isMobileView()) return;
             if (!nav.contains(e.target) && !btn.contains(e.target)) {
                 closeNav();
             }
         });
 
-        // Close on resize when switching to desktop
+        // Close when clicking a nav link (for better UX)
+        nav.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (isMobileView()) {
+                    closeNav();
+                }
+            });
+        });
+
+        // Handle resize: reset nav state when switching to desktop
         window.addEventListener('resize', function() {
-            if (window.innerWidth > 880) {
+            if (!isMobileView()) {
                 closeNav();
+            }
+        });
+
+        // Handle escape key to close menu
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && nav.classList.contains('open')) {
+                closeNav();
+                btn.focus();
             }
         });
     })();

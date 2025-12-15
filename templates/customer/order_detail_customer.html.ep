@@ -52,6 +52,7 @@
     
     <div class="card">
         <h3>Order Items</h3>
+        <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
@@ -74,6 +75,7 @@
                 % }
             </tbody>
         </table>
+        </div>
     </div>
     
     <div class="cart-summary">

@@ -4,6 +4,7 @@
 requires 'Mojolicious', '>= 9.0';
 requires 'DBI', '>= 1.643';
 requires 'DBD::SQLite', '>= 1.70';
+requires 'DBD::Pg', '>= 3.14.0';  # PostgreSQL driver for production
 requires 'Crypt::Bcrypt', '>= 0.011';
 requires 'JSON', '>= 4.0';
 requires 'Time::Piece', '>= 1.33';

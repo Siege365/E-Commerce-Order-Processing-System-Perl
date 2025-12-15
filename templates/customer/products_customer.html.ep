@@ -41,6 +41,7 @@
 % if (session('role') eq 'admin' || session('role') eq 'staff') {
 <!-- Admin/Staff View - Table Format -->
 <div class="card">
+    <div class="table-wrapper">
     <table>
         <colgroup>
             <col style="width: 5%;">
@@ -99,6 +100,7 @@
             % }
         </tbody>
     </table>
+    </div>
     
     % if (defined stash('total_pages') && stash('total_pages') > 1) {
     <div style="text-align: center; margin-top: 30px;">

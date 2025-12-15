@@ -64,6 +64,18 @@ td a:hover {
    RESPONSIVE
    ========================================================================== */
 
+/* Table wrapper for horizontal scrolling on mobile */
+.table-wrapper, .table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.table-wrapper table, .table-container table {
+    min-width: 600px;
+}
+
 @media (max-width: 768px) {
     th, td {
         padding: 12px 14px;
@@ -75,5 +87,29 @@ td a:hover {
     
     td {
         font-size: 13px;
+    }
+    
+    /* Action buttons in tables */
+    td .btn, td button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    /* Stack action buttons vertically on very small screens */
+    td .btn-group, td .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    th, td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+    
+    th {
+        font-size: 10px;
     }
 }

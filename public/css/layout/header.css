@@ -9,7 +9,8 @@ header {
     padding: 10px 0;
     box-shadow: 0 4px 20px rgba(46, 134, 171, 0.28);
     position: relative;
-    overflow: hidden;
+    /* IMPORTANT: overflow visible so mobile nav dropdown can appear below header */
+    overflow: visible;
 }
 
 /* Decorative header pattern */
@@ -202,10 +203,17 @@ nav a:hover::after {
 header.sticky {
     position: sticky;
     top: 0;
-    z-index: 9999;
+    z-index: 99999;
     box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     border-bottom: 1px solid rgba(255,255,255,0.06);
     backdrop-filter: saturate(120%) blur(4px);
+}
+
+/* Ensure header allows mobile nav to be on top */
+@media (max-width: 880px) {
+    header.sticky {
+        z-index: 99998;
+    }
 }
 
 header.sticky .header-logo {
@@ -244,13 +252,135 @@ header, nav, .header-content {
     display: flex;
 }
 
+/* Hamburger animation for active state */
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
 @media (max-width: 880px) {
-    .hamburger { display: flex; }
-    .site-nav { display: none; position: absolute; left: 0; right: 0; top: 100%; background: rgba(9, 45, 56, 0.95); padding: 10px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.18); border-radius: 0 0 8px 8px; z-index: 9998; }
-    .site-nav.open { display: block; }
-    .site-nav ul { flex-direction: column; gap: 0; padding: 6px 12px; }
-    .site-nav ul li { padding: 6px 0; }
-    .site-nav ul li a { padding: 10px 14px; display: block; }
+    .hamburger { 
+        display: flex; 
+        z-index: 999999;
+        position: relative;
+    }
+    
+    .site-nav { 
+        display: none !important;
+        position: fixed; 
+        left: 0; 
+        right: 0; 
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100vh;
+        background: #062c38 !important;
+        background: linear-gradient(135deg, #0a3d4d 0%, #062c38 100%) !important;
+        padding: 80px 0 30px 0; 
+        box-shadow: none; 
+        border-radius: 0; 
+        z-index: 999998;
+        overflow-y: auto;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .site-nav.open { 
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Block body scroll when menu is open */
+    body.nav-open {
+        overflow: hidden;
+    }
+    
+    .site-nav ul { 
+        flex-direction: column; 
+        gap: 0; 
+        padding: 20px 30px; 
+    }
+    
+    .site-nav ul li { 
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .site-nav ul li:last-child {
+        border-bottom: none;
+    }
+    
+    .site-nav ul li a { 
+        padding: 18px 20px; 
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff !important;
+        background: transparent;
+        transition: background 0.2s ease;
+    }
+    
+    .site-nav ul li a svg {
+        opacity: 1;
+        width: 24px;
+        height: 24px;
+        stroke: #4ecdc4;
+    }
+    
+    .site-nav ul li a:hover,
+    .site-nav ul li a:active {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4 !important;
+    }
+    
+    .site-nav ul li.nav-right {
+        margin-left: 0;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid rgba(255,255,255,0.2);
+        border-bottom: none;
+    }
+    
+    .site-nav ul li.nav-right a {
+        color: #ff6b6b !important;
+    }
+    
+    .site-nav ul li.nav-right a svg {
+        stroke: #ff6b6b;
+    }
+    
+    /* Ensure header has proper z-index and positioning for mobile menu */
+    header {
+        position: relative;
+        z-index: 9999;
+    }
+    
+    .header-content.combined {
+        flex-wrap: wrap;
+    }
+    
+    .logo-section {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .brand-text h1 {
+        font-size: 18px;
+    }
+    
+    .brand-text .tagline {
+        font-size: 9px;
+        display: none;
+    }
 }
 
 /* Logout Link */

@@ -244,3 +244,80 @@
 .metric-card:hover.info .metric-card-icon {
     box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
 }
+
+/* ============================================================
+   CARD RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .card {
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: var(--radius-lg);
+    }
+    
+    .card:has(table) {
+        padding: 15px;
+    }
+    
+    .card h2 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .card-header .btn {
+        width: 100%;
+    }
+    
+    .metrics {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .metric-card {
+        padding: 20px;
+        min-height: auto;
+    }
+    
+    .metric-card h3 {
+        font-size: 13px;
+    }
+    
+    .metric-value {
+        font-size: 28px;
+    }
+    
+    .metric-card-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .metric-card-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 15px;
+    }
+    
+    .card h2 {
+        font-size: 16px;
+    }
+    
+    .metric-card {
+        padding: 15px;
+    }
+    
+    .metric-value {
+        font-size: 24px;
+    }
+}

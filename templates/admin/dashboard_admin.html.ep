@@ -114,6 +114,7 @@
         % }
     </div>
     % if ($stats->{recent_orders} && @{$stats->{recent_orders}}) {
+    <div class="table-wrapper">
     <table>
         <colgroup>
             <col style="width: 25%;">
@@ -147,6 +148,7 @@
             % }
         </tbody>
     </table>
+    </div>
     
     % unless ($role eq 'admin' || $role eq 'staff') {
         % if (defined $stats->{total_pages} && $stats->{total_pages} > 1) {
