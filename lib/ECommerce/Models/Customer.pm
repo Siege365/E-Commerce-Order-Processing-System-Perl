@@ -192,17 +192,39 @@ sub get_top_customers {
     $limit //= 10;
     
     my $dbh = $self->{db}->connect();
-    my $sth = $dbh->prepare(
-        "SELECT c.*, u.email, 
-                COUNT(DISTINCT o.id) as order_count, 
-                COALESCE(SUM(o.total), 0) as total_spent 
-         FROM customers c 
-         LEFT JOIN users u ON c.user_id = u.id 
-         LEFT JOIN orders o ON c.id = o.customer_id AND o.status != 'cancelled' 
-         GROUP BY c.id 
-         ORDER BY total_spent DESC 
-         LIMIT ?"
-    );
+    
+    # Check if we're using PostgreSQL (stricter GROUP BY requirements)
+    my $is_postgres = $self->{db}->{db_type} eq 'postgres';
+    
+    my $sql;
+    if ($is_postgres) {
+        # PostgreSQL: explicitly list all columns in GROUP BY or use aggregate
+        $sql = "SELECT c.id, c.user_id, c.first_name, c.last_name, c.phone, 
+                       c.address, c.city, c.state, c.zip_code, c.country, c.created_at,
+                       u.email, 
+                       COUNT(DISTINCT o.id) as order_count, 
+                       COALESCE(SUM(o.total), 0) as total_spent 
+                FROM customers c 
+                LEFT JOIN users u ON c.user_id = u.id 
+                LEFT JOIN orders o ON c.id = o.customer_id AND o.status != 'cancelled' 
+                GROUP BY c.id, c.user_id, c.first_name, c.last_name, c.phone, 
+                         c.address, c.city, c.state, c.zip_code, c.country, c.created_at, u.email 
+                ORDER BY total_spent DESC 
+                LIMIT ?";
+    } else {
+        # SQLite: allows c.* with GROUP BY c.id
+        $sql = "SELECT c.*, u.email, 
+                       COUNT(DISTINCT o.id) as order_count, 
+                       COALESCE(SUM(o.total), 0) as total_spent 
+                FROM customers c 
+                LEFT JOIN users u ON c.user_id = u.id 
+                LEFT JOIN orders o ON c.id = o.customer_id AND o.status != 'cancelled' 
+                GROUP BY c.id 
+                ORDER BY total_spent DESC 
+                LIMIT ?";
+    }
+    
+    my $sth = $dbh->prepare($sql);
     $sth->execute($limit);
     my $customers = $sth->fetchall_arrayref({});
     $sth->finish();
