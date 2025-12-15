@@ -65,6 +65,7 @@
 @import url('components/tables.css');
 @import url('components/badges.css');
 @import url('components/alerts.css');
+@import url('components/toast.css');
 @import url('components/dropdown.css');
 @import url('components/modal.css');
 @import url('components/pagination.css');
