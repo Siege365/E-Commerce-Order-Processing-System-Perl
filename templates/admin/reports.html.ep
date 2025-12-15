@@ -68,7 +68,7 @@
         </thead>
         <tbody>
             % for my $status (qw(pending processing shipped delivered cancelled refunded)) {
-            % if ($stats->{by_status}{$status}) {
+            % if ($stats->{by_status}{$status} && $stats->{by_status}{$status}{count}) {
             <tr>
                 <td><span class="status <%= $status %>"><%= ucfirst($status) %></span></td>
                 <td><%= format_number($stats->{by_status}{$status}{count}) %></td>
