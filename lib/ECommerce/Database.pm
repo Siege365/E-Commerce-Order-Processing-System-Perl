@@ -14,9 +14,14 @@ use ECommerce::Config;
 
 sub new {
     my $class = shift;
+    my $db_type = $ENV{DATABASE_URL} ? 'postgres' : 'sqlite';
+    
+    # Log database type being used
+    print STDERR "Database: Using $db_type connection\n";
+    
     my $self = {
         db_path => $ECommerce::Config::DB_PATH,
-        db_type => $ENV{DATABASE_URL} ? 'postgres' : 'sqlite',
+        db_type => $db_type,
     };
     return bless $self, $class;
 }
@@ -31,35 +36,61 @@ sub connect {
         my $database_url = $ENV{DATABASE_URL} or die "DATABASE_URL environment variable not set";
         
         # Parse PostgreSQL URL: postgresql://user:password@host:port/database
+        # Render format: postgres://user:password@host.region-postgres.render.com:5432/database
         my ($user, $password, $host, $port, $database);
-        if ($database_url =~ m{^postgres(?:ql)?://([^:]+):([^@]+)@([^:]+):?(\d*)/?(.+)$}) {
+        
+        # First, strip the protocol
+        my $url_without_protocol = $database_url;
+        $url_without_protocol =~ s{^postgres(?:ql)?://}{};
+        
+        # Split into credentials and host parts: user:password@host:port/database
+        if ($url_without_protocol =~ m{^([^:]+):([^@]+)@(.+)$}) {
             $user = $1;
             $password = $2;
-            $host = $3;
-            $port = $4 || 5432;
-            $database = $5;
-        } elsif ($database_url =~ m{^postgres(?:ql)?://([^:]+):([^@]+)@([^/]+)/(.+)$}) {
-            # URL without port
-            $user = $1;
-            $password = $2;
-            $host = $3;
-            $port = 5432;
-            $database = $4;
+            my $host_part = $3;  # host:port/database or host/database
+            
+            # Parse host:port/database
+            if ($host_part =~ m{^([^/:]+):(\d+)/(.+)$}) {
+                # With port: host:port/database
+                $host = $1;
+                $port = $2;
+                $database = $3;
+            } elsif ($host_part =~ m{^([^/]+)/(.+)$}) {
+                # Without port: host/database
+                $host = $1;
+                $port = 5432;
+                $database = $2;
+            } else {
+                die "Invalid DATABASE_URL format - cannot parse host/database: $database_url";
+            }
         } else {
-            die "Invalid DATABASE_URL format: $database_url";
+            die "Invalid DATABASE_URL format - cannot parse credentials: $database_url";
         }
+        
+        # Remove any query parameters from database name
+        $database =~ s/\?.*$//;
+        
+        # Log connection details (without password)
+        print STDERR "Database: Connecting to PostgreSQL - host=$host, port=$port, database=$database, user=$user\n";
         
         my $dsn = "dbi:Pg:dbname=$database;host=$host;port=$port";
         
-        $dbh = DBI->connect(
-            $dsn,
-            $user, $password,
-            {
-                RaiseError => 1,
-                AutoCommit => 1,
-                pg_enable_utf8 => 1,
-            }
-        ) or die "Cannot connect to PostgreSQL database: $DBI::errstr";
+        eval {
+            $dbh = DBI->connect(
+                $dsn,
+                $user, $password,
+                {
+                    RaiseError => 1,
+                    AutoCommit => 1,
+                    pg_enable_utf8 => 1,
+                }
+            );
+        };
+        if ($@ || !$dbh) {
+            my $error = $@ || $DBI::errstr || "Unknown error";
+            die "Cannot connect to PostgreSQL database: $error\nDSN: $dsn\n";
+        }
+        print STDERR "Database: Successfully connected to PostgreSQL\n";
     } else {
         # SQLite connection (for local development)
         my $dir = dirname($self->{db_path});

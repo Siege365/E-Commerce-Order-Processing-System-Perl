@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     libpq-dev \
     postgresql-client \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -19,15 +20,15 @@ RUN cpanm --notest --installdeps .
 # Copy application files
 COPY . .
 
-# Create data directory for SQLite
+# Create data directory for SQLite (local dev fallback)
 RUN mkdir -p data
 
-# Expose port
-EXPOSE 8080
+# Expose port (Render uses 10000, local uses 8080)
+EXPOSE 10000
 
 # Set environment variables
 ENV MOJO_MODE=production
-ENV PORT=8080
+ENV PORT=10000
 
-# Run the application
-CMD ["perl", "app.pl", "daemon", "-l", "http://*:8080"]
+# Run the application using shell to expand $PORT
+CMD perl app.pl daemon -l http://*:${PORT:-10000}

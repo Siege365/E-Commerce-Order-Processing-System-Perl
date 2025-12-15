@@ -13,6 +13,7 @@ This guide will walk you through deploying your E-Commerce Order Processing Syst
 Render's free tier has **ephemeral storage** - any files saved to disk (like SQLite databases) are deleted when the service spins down due to inactivity. PostgreSQL provides persistent storage that survives service restarts.
 
 The application automatically detects which database to use:
+
 - **Local Development**: SQLite (file-based, no setup needed)
 - **Production (Render)**: PostgreSQL (via `DATABASE_URL` environment variable)
 
@@ -60,12 +61,12 @@ git push origin main
 
 In the **Environment** section, add these variables:
 
-| Key | Value | Notes |
-|-----|-------|-------|
-| `DATABASE_URL` | (Paste Internal Database URL from Step 2) | Must start with `postgresql://` |
-| `MOJOLICIOUS_SECRET_KEY` | (Generate secure random string) | See below for generation |
-| `MOJO_MODE` | `production` | Sets production mode |
-| `PORT` | `10000` | Render's default port |
+| Key                      | Value                                     | Notes                           |
+| ------------------------ | ----------------------------------------- | ------------------------------- |
+| `DATABASE_URL`           | (Paste Internal Database URL from Step 2) | Must start with `postgresql://` |
+| `MOJOLICIOUS_SECRET_KEY` | (Generate secure random string)           | See below for generation        |
+| `MOJO_MODE`              | `production`                              | Sets production mode            |
+| `PORT`                   | `10000`                                   | Render's default port           |
 
 ### Generating Secure Secret Key
 
@@ -76,6 +77,7 @@ perl -e "use Mojo::Util qw(secure_random_bytes); print unpack('H*', secure_rando
 ```
 
 Or use this simpler version:
+
 ```powershell
 perl -e "print join('', map { ('a'..'z','A'..'Z',0..9)[rand 62] } 1..64)"
 ```
@@ -94,6 +96,7 @@ perl -e "print join('', map { ('a'..'z','A'..'Z',0..9)[rand 62] } 1..64)"
 ## Step 6: Initialize Database
 
 Once deployed, the application will automatically:
+
 - Connect to PostgreSQL via `DATABASE_URL`
 - Create all necessary tables
 - Insert sample data (admin, staff, customer users)
@@ -113,10 +116,10 @@ You can verify by accessing your app at: `https://your-service-name.onrender.com
 
 The system creates three sample users:
 
-| Role | Username | Password | Email |
-|------|----------|----------|-------|
-| Admin | admin | admin123 | admin@ecommerce.com |
-| Staff | staff | staff123 | staff@ecommerce.com |
+| Role     | Username | Password    | Email                  |
+| -------- | -------- | ----------- | ---------------------- |
+| Admin    | admin    | admin123    | admin@ecommerce.com    |
+| Staff    | staff    | staff123    | staff@ecommerce.com    |
 | Customer | customer | customer123 | customer@ecommerce.com |
 
 **⚠️ IMPORTANT**: Change these passwords immediately after first login!
@@ -126,6 +129,7 @@ The system creates three sample users:
 ### Database Connection Errors
 
 If you see `Can't connect to database`:
+
 1. Verify `DATABASE_URL` environment variable is set correctly
 2. Check it uses **Internal Database URL** (not External)
 3. Ensure database and web service are in **same region**
@@ -134,12 +138,14 @@ If you see `Can't connect to database`:
 ### Module Not Found Errors
 
 If you see `Can't locate DBD/Pg.pm`:
+
 1. Check that `cpanfile` includes `DBD::Pg >= 3.14.0`
 2. Rebuild the service (Manual Deploy → Clear build cache & deploy)
 
 ### Port Binding Errors
 
 If you see `Can't bind to port`:
+
 1. Ensure `PORT` environment variable is set to `10000`
 2. Check Dockerfile exposes port 10000
 3. Verify `app.pl` uses `$ENV{PORT} || 3000`
@@ -149,6 +155,7 @@ If you see `Can't bind to port`:
 Free tier services spin down after 15 minutes of inactivity. This is normal. They spin back up automatically when accessed (takes ~30 seconds).
 
 To keep it alive:
+
 - Upgrade to paid tier ($7/month)
 - Use a monitoring service to ping it every 10 minutes
 - Accept the spin-down behavior for portfolio projects
@@ -172,6 +179,7 @@ git push origin main
 Render will **automatically** rebuild and redeploy your service.
 
 To disable auto-deploy:
+
 - Dashboard → Settings → Build & Deploy → Turn off "Auto-Deploy"
 
 ## Database Management
@@ -198,6 +206,7 @@ pg_dump "postgresql://user:pass@dpg-xxxxx-a.oregon-postgres.render.com:5432/data
 ### Reset Database
 
 If you need to reset:
+
 1. Dashboard → PostgreSQL service → Info tab
 2. Click **"Delete Database"**
 3. Create new PostgreSQL database
@@ -207,18 +216,21 @@ If you need to reset:
 ## Cost Considerations
 
 **Free Tier Limits**:
+
 - Web Service: 750 hours/month (enough for 1 service running 24/7)
 - PostgreSQL: 90 days, then deleted (for testing only)
 - Service spins down after 15 minutes inactivity
 - Limited to 512MB RAM
 
 **Upgrading** (when ready for production):
+
 - Web Service: $7/month (always running, no spin-down)
 - PostgreSQL: $7/month (persistent beyond 90 days)
 
 ## Custom Domain (Optional)
 
 To use your own domain:
+
 1. Dashboard → Your Service → Settings
 2. Scroll to **Custom Domain**
 3. Click **"Add Custom Domain"**
